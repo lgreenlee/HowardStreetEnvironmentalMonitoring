@@ -1,0 +1,9 @@
+[submodule "Adafruit_CC3300_Library"]
+	path = Adafruit_CC3300_Library
+	url = https://github.com/adafruit/Adafruit_CC3000_Library.git
+[submodule "Adafruit_TMP006"]
+	path = Adafruit_TMP006
+	url = https://github.com/adafruit/Adafruit_TMP006.git
+[submodule "DHT22_Library"]
+	path = DHT22_Library
+	url = https://github.com/adafruit/DHT-sensor-library.git
