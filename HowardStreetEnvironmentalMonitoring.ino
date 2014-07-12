@@ -17,6 +17,14 @@
 #define UNIT_FORMAT         'F'
 //1 For true, 0 for false
 #define DEBUG_STATEMENTS    0
+#if DEBUG_STATEMENTS
+#define DBG_print(x) Serial.print(x)
+#define DBG_println(x) Serial.println(x)
+#else
+#define DBG_print(x) {}
+#define DBG_println(x) {}
+#endif
+
 //ThingSpeak will throttle at anything faster than 1 update every 15 seconds
 #define UPDATE_RATE         15000
 
@@ -108,15 +116,12 @@ float convertCtoK(float value) {
 
 void resolveServerAddress() {
  // Try looking up the website's IP address
-    if(DEBUG_STATEMENTS) {
-     if (DEBUG_STATEMENTS) Serial.print(WEBSITE); 
-     if (DEBUG_STATEMENTS) Serial.println(F(" executing domain lookup."));
-    }
-    
+  DBG_print(WEBSITE);
+  DBG_println(F(" executing domain lookup."));
     if (cc3000.getHostByName(WEBSITE, &ip) == 0) {
       if (cc3000.getHostByName(WEBSITE, &ip) == 0) {
         if (cc3000.getHostByName(WEBSITE, &ip) == 0) {
-          if(DEBUG_STATEMENTS) Serial.println("After three tries the domain name could not be resolved.");
+          DBG_println(F("After three tries the domain name could not be resolved."));
         }
       }
     }
@@ -124,19 +129,19 @@ void resolveServerAddress() {
 
 //Connects to the AP if the client is not already connected.
 void connectAP() {
-  if (DEBUG_STATEMENTS) Serial.println(F("Begin AP connection."));
+  DBG_println(F("Begin AP connection."));
   if (!cc3000.begin())
   {
-    if (DEBUG_STATEMENTS) Serial.println(F("Unable to contact device. Check the module or connection."));
+    DBG_println(F("Unable to contact device. Check the module or connection."));
   }
   
   if (!cc3000.checkConnected()) {
     // Connect to WiFi network
     cc3000.connectToAP(WLAN_SSID, WLAN_PASS, WLAN_SECURITY);
-    if (DEBUG_STATEMENTS) Serial.println(F("Connected using AES and WPA2 for security"));
+    DBG_println(F("Connected using AES and WPA2 for security"));
   
     /* Wait for DHCP to complete */
-    if (DEBUG_STATEMENTS) Serial.println(F("Checking DHCP address allocation."));
+    DBG_println(F("Checking DHCP address allocation."));
     if (!cc3000.checkDHCP())
     {
       //wait a bit longer for the address.
@@ -144,9 +149,9 @@ void connectAP() {
     }
     
     if (cc3000.checkDHCP()) {
-      if (DEBUG_STATEMENTS) Serial.println(F("DHCP address acquired."));
+      DBG_println(F("DHCP address acquired."));
     } else {
-      if (DEBUG_STATEMENTS) Serial.println(F("DHCP address not acquired!"));
+      DBG_println(F("DHCP address not acquired!"));
     }
   }
 }
@@ -161,42 +166,42 @@ int freeRam () {
 //Initalize all relevent devices on the board. Ensure that each device can be properly read and report the value. Generally speaking the Floor temp and the air temp should only diverge by a few degrees on startup.
 void setup(void){
   
-  if (DEBUG_STATEMENTS) Serial.println("\n\n\n");
+  DBG_println("\n\n\n");
   // Initialize
   Serial.begin(115200);
-  if (DEBUG_STATEMENTS) Serial.println(F("TMP006 Initialization Starting."));
+  DBG_println(F("TMP006 Initialization Starting."));
   tmp006.begin();
-  if (DEBUG_STATEMENTS) Serial.println(F("TMP006 Initialization Complete."));
+  DBG_println(F("TMP006 Initialization Complete."));
   
-  if (DEBUG_STATEMENTS) Serial.println(F("TMP006 - Taking initial floor temperature."));
+  DBG_println(F("TMP006 - Taking initial floor temperature."));
   sampleFloorTemperature();
-  if (DEBUG_STATEMENTS) Serial.print(floorTemperatureCh);
-  if (DEBUG_STATEMENTS) Serial.println(UNIT_FORMAT);
+  DBG_print(floorTemperatureCh);
+  DBG_println(UNIT_FORMAT);
   
-  if (DEBUG_STATEMENTS) Serial.println(F("AM2303/DHT22 Initialization Starting."));
+  DBG_println(F("AM2303/DHT22 Initialization Starting."));
   dht.begin();
-  if (DEBUG_STATEMENTS) Serial.println(F("AM2303/DHT22 Initialization Complete."));  
+  DBG_println(F("AM2303/DHT22 Initialization Complete."));  
   
-  if (DEBUG_STATEMENTS) Serial.println(F("Taking initial air temperature."));
+  DBG_println(F("Taking initial air temperature."));
   sampleAirTemperature();
-  if (DEBUG_STATEMENTS) Serial.print(airTemperatureCh);
-  if (DEBUG_STATEMENTS) Serial.println(UNIT_FORMAT);
+  DBG_print(airTemperatureCh);
+  DBG_println(UNIT_FORMAT);
   
-  if (DEBUG_STATEMENTS) Serial.println(F("Taking initial air humidity."));
+  DBG_println(F("Taking initial air humidity."));
   sampleAirHumidity();
-  if (DEBUG_STATEMENTS) Serial.print(airHumidityCh);
-  if (DEBUG_STATEMENTS) Serial.println(F(" %"));
+  DBG_print(airHumidityCh);
+  DBG_println(F(" %"));
 
-  if (DEBUG_STATEMENTS) Serial.println(F("Connecting to the Access Point."));
+  DBG_println(F("Connecting to the Access Point."));
   connectAP();
-  if (DEBUG_STATEMENTS) Serial.println(F("Connection Complete."));
+  DBG_println(F("Connection Complete."));
   
-  if (DEBUG_STATEMENTS) Serial.println(F("Resolving the thingspeak address"));
+  DBG_println(F("Resolving the thingspeak address"));
   resolveServerAddress();
-  if (DEBUG_STATEMENTS) Serial.println(F("Address resolved"));
+  DBG_println(F("Address resolved"));
   
-  if (DEBUG_STATEMENTS) Serial.print(F("Requests are made with API key: "));
-  if (DEBUG_STATEMENTS) Serial.println(API_KEY);   
+  DBG_print(F("Requests are made with API key: "));
+  DBG_println(API_KEY);
 }
 
 void loop(void){
@@ -209,9 +214,9 @@ void loop(void){
   sampleFloorTemperature();
   if (DEBUG_STATEMENTS) duration = micros() - startMicros;
   
-  if (DEBUG_STATEMENTS) Serial.print(F("Data sampling took: "));
-  if (DEBUG_STATEMENTS) Serial.print(duration/4L);
-  if (DEBUG_STATEMENTS) Serial.println(F(" uS"));
+  DBG_print(F("Data sampling took: "));
+  DBG_print(duration/4L);
+  DBG_println(F(" uS"));
   
   // Hack and slash String based method of concatenating data for proper format to write to Thingspeak channels
   //requestString = "field1=" + airTemperatureStr + "&field2=" + airHumidityStr + "&field3=" + floorTemperatureStr;
@@ -220,13 +225,13 @@ void loop(void){
   updateThingSpeak();
   if (DEBUG_STATEMENTS) duration = micros() - startMicros;
   
-  if (DEBUG_STATEMENTS) Serial.print(F("Transmission took: "));
-  if (DEBUG_STATEMENTS) Serial.print(duration/4L);
-  if (DEBUG_STATEMENTS) Serial.println(F(" uS"));
+  DBG_print(F("Transmission took: "));
+  DBG_print(duration/4L);
+  DBG_println(F(" uS"));
   
-  if (DEBUG_STATEMENTS) Serial.print(F("Free RAM: "));
-  if (DEBUG_STATEMENTS) Serial.print(freeRam());
-  if (DEBUG_STATEMENTS) Serial.println(F(" bytes"));
+  DBG_print(F("Free RAM: "));
+  DBG_print(freeRam());
+  DBG_println(F(" bytes"));
    
   delay(6000);
 }
@@ -241,7 +246,7 @@ void updateThingSpeak()
   if (www.connected())
   { 
     
-    if (DEBUG_STATEMENTS) Serial.println(F("Connected to thingspeak. Forming request."));
+    DBG_println(F("Connected to thingspeak. Forming request."));
     wdt_reset();    
     www.fastrprint(F("GET http://api.thingspeak.com/update?key="));
     wdt_reset();
@@ -272,18 +277,18 @@ void updateThingSpeak()
     www.fastrprint(F("\n\n"));
     wdt_reset();
     
-    if (DEBUG_STATEMENTS) Serial.println(F("Reading response."));
+    DBG_println(F("Reading response."));
     wdt_reset();    
     while (www.connected()) {
       while (www.available()) {
         wdt_reset();
         char c = www.read();
-        if (DEBUG_STATEMENTS) Serial.print(c);
+        DBG_print(c);
       }
     }
     
-    if (DEBUG_STATEMENTS) Serial.println("");
-    if (DEBUG_STATEMENTS) Serial.println(F("Response complete."));
+    DBG_println("");
+    DBG_println(F("Response complete."));
     
     wdt_reset();
     www.close();
@@ -291,18 +296,14 @@ void updateThingSpeak()
   else
   {
     wdt_disable();
-    if (DEBUG_STATEMENTS) Serial.println();
-    if (DEBUG_STATEMENTS) Serial.println(F("Connection Failed. Attempting to reset the connection."));
-    if (DEBUG_STATEMENTS) Serial.println();
+    DBG_println(F("\nConnection Failed. Attempting to reset the connection.\n"));
     //Refresh the connection
     connectAP();
     resolveServerAddress();
     //Serial.println(F("Looking up server address to be sure it has not changed.")); 
     //resolveServerAddress();
     //Serial.println(F("Server address updated."));
-    if (DEBUG_STATEMENTS) Serial.println();
-    if (DEBUG_STATEMENTS) Serial.println(F("Reset complete."));
-    if (DEBUG_STATEMENTS) Serial.println();
+    DBG_println(F("\nReset complete.\n"));
    }
    wdt_disable();
 }
